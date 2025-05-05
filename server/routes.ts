@@ -294,6 +294,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users (admin only)
+  app.get(`${apiPrefix}/admin/users`, isAdmin, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      return res.json(allUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
