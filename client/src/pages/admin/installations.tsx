@@ -198,6 +198,27 @@ const AdminInstallations: React.FC = () => {
     setCompletionDate(installation.completionDate ? 
       new Date(installation.completionDate).toISOString().split('T')[0] : '');
   };
+  
+  const handleCreateInstallation = () => {
+    // Validate required fields
+    if (!newInstallation.userId || !newInstallation.productId || !newInstallation.location) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Submit the new installation
+    createMutation.mutate({
+      userId: parseInt(newInstallation.userId),
+      productId: parseInt(newInstallation.productId),
+      location: newInstallation.location,
+      status: newInstallation.status,
+      notes: newInstallation.notes || undefined,
+    });
+  };
 
   // Filter installations based on search and status filter
   const filteredInstallations = installations?.filter(installation => {
@@ -239,9 +260,146 @@ const AdminInstallations: React.FC = () => {
             </Button>
           </Link>
           <h1 className="text-2xl font-bold text-primary">Manage Installations</h1>
+          <div className="ml-auto">
+            <Button 
+              onClick={() => setShowAddForm(true)}
+              className="bg-primary text-white"
+            >
+              Add New Installation
+            </Button>
+          </div>
         </div>
 
-        {selectedInstallation ? (
+        {showAddForm ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New Installation</CardTitle>
+              <CardDescription>
+                Create a new installation for a customer
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Customer
+                  </label>
+                  <Select
+                    value={newInstallation.userId}
+                    onValueChange={(value) => setNewInstallation({
+                      ...newInstallation,
+                      userId: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users?.filter(u => u.role === 'client').map(user => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.name} ({user.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Product
+                  </label>
+                  <Select
+                    value={newInstallation.productId}
+                    onValueChange={(value) => setNewInstallation({
+                      ...newInstallation,
+                      productId: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products?.map(product => (
+                        <SelectItem key={product.id} value={product.id.toString()}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  <Input
+                    value={newInstallation.location}
+                    onChange={(e) => setNewInstallation({
+                      ...newInstallation,
+                      location: e.target.value
+                    })}
+                    placeholder="Installation address"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <Select
+                    value={newInstallation.status}
+                    onValueChange={(value) => setNewInstallation({
+                      ...newInstallation,
+                      status: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <Textarea
+                  value={newInstallation.notes}
+                  onChange={(e) => setNewInstallation({
+                    ...newInstallation,
+                    notes: e.target.value
+                  })}
+                  placeholder="Enter notes about this installation"
+                  rows={4}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateInstallation}
+                  disabled={createMutation.isPending}
+                  className="bg-primary text-white"
+                >
+                  {createMutation.isPending ? 'Creating...' : 'Create Installation'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : selectedInstallation ? (
           <Card>
             <CardHeader>
               <CardTitle>Update Installation</CardTitle>

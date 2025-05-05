@@ -12,8 +12,10 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { Link } from 'wouter';
 
 const getStatusPercentage = (status: string): number => {
   switch (status) {
@@ -118,13 +120,22 @@ const InstallationTracker: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-800">
-        {isAdmin ? 'Manage Installations' : 'My Solar Installations'}
-      </h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">
+          {isAdmin ? 'Manage Installations' : 'My Solar Installations'}
+        </h2>
+        {isAdmin && (
+          <Link href="/admin/installations">
+            <Button className="bg-primary text-white">
+              Installation Management
+            </Button>
+          </Link>
+        )}
+      </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {installations.map((installation) => (
-          <Card key={installation.id} className="overflow-hidden">
+          <Card key={installation.id} className={`overflow-hidden border-l-4 hover:shadow-lg transition-shadow duration-200 ${getStatusColor(installation.status).replace('bg-', 'border-l-')}`}>
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div>
@@ -139,44 +150,57 @@ const InstallationTracker: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="pb-2">
-              <div className="mb-4">
-                <p className="text-sm text-gray-500 mb-1">Installation Progress</p>
-                <Progress value={getStatusPercentage(installation.status)} className="h-2" />
+              <div className="mb-6">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Start</span>
+                  <span>Installation</span>
+                  <span>Testing</span>
+                  <span>Complete</span>
+                </div>
+                <Progress value={getStatusPercentage(installation.status)} className="h-3 rounded-full" />
+                <div className="mt-2 flex justify-between">
+                  <div className="text-xs text-gray-500">
+                    Status: <span className="font-medium">{getStatusText(installation.status)}</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Completion: <span className="font-medium">{getStatusPercentage(installation.status)}%</span>
+                  </div>
+                </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="text-gray-500">System Size</p>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-gray-50 p-2 rounded">
+                  <p className="text-gray-500 text-xs">System Size</p>
                   <p className="font-medium">{installation.product.name.split(' ')[2] || 'N/A'}</p>
                 </div>
-                <div>
-                  <p className="text-gray-500">Price</p>
+                <div className="bg-gray-50 p-2 rounded">
+                  <p className="text-gray-500 text-xs">Price</p>
                   <p className="font-medium">{formatCurrency(installation.product.price)}</p>
                 </div>
-                {installation.installationDate && (
-                  <div>
-                    <p className="text-gray-500">Installation Date</p>
-                    <p className="font-medium">
-                      {new Date(installation.installationDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
-                {installation.completionDate && (
-                  <div>
-                    <p className="text-gray-500">Completion Date</p>
-                    <p className="font-medium">
-                      {new Date(installation.completionDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
+                <div className="bg-gray-50 p-2 rounded">
+                  <p className="text-gray-500 text-xs">Installation Date</p>
+                  <p className="font-medium">
+                    {installation.installationDate ? 
+                      new Date(installation.installationDate).toLocaleDateString() : 'Not scheduled'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-2 rounded">
+                  <p className="text-gray-500 text-xs">Completion Date</p>
+                  <p className="font-medium">
+                    {installation.completionDate ? 
+                      new Date(installation.completionDate).toLocaleDateString() : 'Pending'}
+                  </p>
+                </div>
               </div>
             </CardContent>
-            <CardFooter className="pt-2 flex flex-col items-start">
-              {installation.notes && (
-                <div className="mb-2 w-full">
-                  <p className="text-xs text-gray-500">Notes:</p>
-                  <p className="text-sm">{installation.notes}</p>
+            <CardFooter className="pt-2 flex flex-col items-start border-t mt-4">
+              {installation.notes ? (
+                <div className="w-full">
+                  <p className="text-xs font-medium text-gray-700 mb-1">Latest Update:</p>
+                  <p className="text-sm text-gray-600">{installation.notes}</p>
                 </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No additional notes available</p>
               )}
             </CardFooter>
           </Card>

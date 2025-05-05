@@ -95,11 +95,18 @@ const Dashboard: React.FC = () => {
                     <p className="text-gray-500 max-w-md mx-auto mb-6">
                       The client management interface is coming soon. This will allow you to view and manage all clients and their installations.
                     </p>
-                    <Link href="/admin/clients">
-                      <Button className="bg-primary text-white">
-                        Go to Admin Panel
-                      </Button>
-                    </Link>
+                    <div className="flex justify-center space-x-4">
+                      <Link href="/admin/installations">
+                        <Button className="bg-primary text-white">
+                          Manage Installations
+                        </Button>
+                      </Link>
+                      <Link href="/admin/clients">
+                        <Button variant="outline" className="border-primary text-primary">
+                          Manage Clients
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </TabsContent>
               )}
