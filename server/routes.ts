@@ -6,28 +6,20 @@ import {
   insertQuoteRequestSchema, 
   insertCalculatorResultSchema,
   insertInstallationSchema,
-  insertSubsidySchema
+  insertSubsidySchema,
+  installations,
+  users,
+  products
 } from "@shared/schema";
-import { setupAuth } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { z } from "zod";
-
-// Middleware to check if user is authenticated
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
-};
-
-// Middleware to check if user is an admin
-const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (req.isAuthenticated() && req.user.role === "admin") {
-    return next();
-  }
-  res.status(403).json({ message: "Forbidden" });
-};
+import { db } from "../db";
+import { eq, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication (async)
+  await setupAuth(app);
+  
   // API route prefix
   const apiPrefix = "/api";
 
@@ -194,6 +186,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching settings by prefix:", error);
       return res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  // INSTALLATION TRACKING ROUTES
+
+  // Get installations for specific user
+  app.get(`${apiPrefix}/installations/user/:userId`, isAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      // Users can only view their own installations unless they are admin
+      if (req.user && (req.user.id !== userId && req.user.role !== "admin")) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const userInstallations = await db.query.installations.findMany({
+        where: eq(installations.userId, userId),
+        with: {
+          product: true,
+        },
+      });
+      
+      return res.json(userInstallations);
+    } catch (error) {
+      console.error("Error fetching user installations:", error);
+      return res.status(500).json({ error: "Failed to fetch installations" });
+    }
+  });
+
+  // Admin routes for installation management
+  
+  // Get all installations (admin only)
+  app.get(`${apiPrefix}/admin/installations`, isAdmin, async (req, res) => {
+    try {
+      const allInstallations = await db.query.installations.findMany({
+        with: {
+          product: true,
+          user: true,
+        },
+      });
+      
+      return res.json(allInstallations);
+    } catch (error) {
+      console.error("Error fetching all installations:", error);
+      return res.status(500).json({ error: "Failed to fetch installations" });
+    }
+  });
+
+  // Update installation status (admin only)
+  app.patch(`${apiPrefix}/admin/installations/:id`, isAdmin, async (req, res) => {
+    try {
+      const installationId = parseInt(req.params.id);
+      if (isNaN(installationId)) {
+        return res.status(400).json({ error: "Invalid installation ID" });
+      }
+      
+      const { status, notes, installationDate, completionDate } = req.body;
+      
+      // Check if installation exists
+      const existingInstallation = await db.query.installations.findFirst({
+        where: eq(installations.id, installationId),
+      });
+      
+      if (!existingInstallation) {
+        return res.status(404).json({ error: "Installation not found" });
+      }
+      
+      // Update installation
+      const [updatedInstallation] = await db
+        .update(installations)
+        .set({
+          status: status || existingInstallation.status,
+          notes: notes !== undefined ? notes : existingInstallation.notes,
+          installationDate: installationDate ? new Date(installationDate) : existingInstallation.installationDate,
+          completionDate: completionDate ? new Date(completionDate) : existingInstallation.completionDate,
+          updatedAt: new Date(),
+        })
+        .where(eq(installations.id, installationId))
+        .returning();
+      
+      return res.json(updatedInstallation);
+    } catch (error) {
+      console.error("Error updating installation:", error);
+      return res.status(500).json({ error: "Failed to update installation" });
+    }
+  });
+
+  // Create new installation (admin only)
+  app.post(`${apiPrefix}/admin/installations`, isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertInstallationSchema.parse(req.body);
+      
+      // Create new installation
+      const installation = await storage.createInstallation(validatedData);
+      
+      return res.status(201).json(installation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      console.error("Error creating installation:", error);
+      return res.status(500).json({ error: "Failed to create installation" });
     }
   });
 

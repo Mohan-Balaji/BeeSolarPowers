@@ -71,7 +71,9 @@ const AuthPage: React.FC = () => {
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
-      await registerMutation.mutateAsync(data);
+      // Add default role of 'client' to registration data
+      const registerData = { ...data, role: "client" };
+      await registerMutation.mutateAsync(registerData);
       navigate('/');
     } catch (error) {
       // Error is handled by the mutation

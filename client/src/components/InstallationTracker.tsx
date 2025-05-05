@@ -153,19 +153,19 @@ const InstallationTracker: React.FC = () => {
                   <p className="text-gray-500">Price</p>
                   <p className="font-medium">{formatCurrency(installation.product.price)}</p>
                 </div>
-                {installation.installation_date && (
+                {installation.installationDate && (
                   <div>
                     <p className="text-gray-500">Installation Date</p>
                     <p className="font-medium">
-                      {new Date(installation.installation_date).toLocaleDateString()}
+                      {new Date(installation.installationDate).toLocaleDateString()}
                     </p>
                   </div>
                 )}
-                {installation.completion_date && (
+                {installation.completionDate && (
                   <div>
                     <p className="text-gray-500">Completion Date</p>
                     <p className="font-medium">
-                      {new Date(installation.completion_date).toLocaleDateString()}
+                      {new Date(installation.completionDate).toLocaleDateString()}
                     </p>
                   </div>
                 )}

@@ -135,10 +135,10 @@ const AdminInstallations: React.FC = () => {
     setSelectedInstallation(installation);
     setStatus(installation.status);
     setNotes(installation.notes || '');
-    setInstallationDate(installation.installation_date ? 
-      new Date(installation.installation_date).toISOString().split('T')[0] : '');
-    setCompletionDate(installation.completion_date ? 
-      new Date(installation.completion_date).toISOString().split('T')[0] : '');
+    setInstallationDate(installation.installationDate ? 
+      new Date(installation.installationDate).toISOString().split('T')[0] : '');
+    setCompletionDate(installation.completionDate ? 
+      new Date(installation.completionDate).toISOString().split('T')[0] : '');
   };
 
   // Filter installations based on search and status filter
@@ -332,8 +332,8 @@ const AdminInstallations: React.FC = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {installation.installation_date ? 
-                            new Date(installation.installation_date).toLocaleDateString() : 'Not scheduled'}
+                          {installation.installationDate ? 
+                            new Date(installation.installationDate).toLocaleDateString() : 'Not scheduled'}
                         </TableCell>
                         <TableCell>
                           <Button 

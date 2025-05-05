@@ -32,14 +32,11 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 // Set up authentication and session management
-export function setupAuth(app: Express) {
+export async function setupAuth(app: Express) {
   // Create Postgres session store
-  const PostgresStore = require("connect-pg-simple")(session);
-  const sessionStore = new PostgresStore({
-    pool,
-    tableName: "session",
-    createTableIfMissing: true,
-  });
+  // Create a simple in-memory session store for now
+  // We'll add PostgreSQL session store in a future update
+  const sessionStore = new session.MemoryStore();
 
   // Configure session middleware
   const sessionSettings: session.SessionOptions = {
