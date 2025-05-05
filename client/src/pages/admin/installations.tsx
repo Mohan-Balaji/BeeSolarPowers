@@ -58,6 +58,16 @@ const AdminInstallations: React.FC = () => {
   const [installationDate, setInstallationDate] = useState('');
   const [completionDate, setCompletionDate] = useState('');
   const [status, setStatus] = useState('');
+  
+  // Add new installation form states
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newInstallation, setNewInstallation] = useState({
+    userId: '',
+    productId: '',
+    location: '',
+    status: 'pending',
+    notes: '',
+  });
 
   // Redirect if not admin
   if (user && user.role !== 'admin') {
@@ -75,6 +85,18 @@ const AdminInstallations: React.FC = () => {
   // Fetch all installations with user and product details
   const { data: installations, isLoading } = useQuery<InstallationWithDetails[]>({
     queryKey: ['/api/admin/installations'],
+    enabled: !!user && user.role === 'admin',
+  });
+  
+  // Fetch all users for the dropdown
+  const { data: users } = useQuery<User[]>({
+    queryKey: ['/api/admin/users'],
+    enabled: !!user && user.role === 'admin',
+  });
+  
+  // Fetch all products for the dropdown
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ['/api/products'],
     enabled: !!user && user.role === 'admin',
   });
 
@@ -101,6 +123,42 @@ const AdminInstallations: React.FC = () => {
     onError: (error: Error) => {
       toast({
         title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Create new installation mutation
+  const createMutation = useMutation({
+    mutationFn: async (data: { 
+      userId: number;
+      productId: number;
+      location: string;
+      status: string;
+      notes?: string;
+    }) => {
+      const res = await apiRequest('POST', '/api/admin/installations', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/installations'] });
+      toast({
+        title: 'Installation Created',
+        description: 'The new installation has been successfully created.',
+      });
+      setShowAddForm(false);
+      setNewInstallation({
+        userId: '',
+        productId: '',
+        location: '',
+        status: 'pending',
+        notes: '',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Creation Failed',
         description: error.message,
         variant: 'destructive',
       });
