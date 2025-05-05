@@ -16,6 +16,7 @@ import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import InstallationTracker from "@/components/InstallationTracker";
 import AdminInstallations from "@/pages/admin/installations";
+import AdminClients from "@/pages/admin/clients";
 
 function Router() {
   return (
@@ -31,7 +32,9 @@ function Router() {
         <ProtectedRoute path="/dashboard" component={Dashboard} />
         <ProtectedRoute path="/installations" component={function Installations() { return <div>Installations Coming Soon</div>; }} />
         <ProtectedRoute path="/profile" component={function Profile() { return <div>Profile Coming Soon</div>; }} />
+        {/* Admin Routes */}
         <ProtectedRoute path="/admin/installations" component={AdminInstallations} />
+        <ProtectedRoute path="/admin/clients" component={AdminClients} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

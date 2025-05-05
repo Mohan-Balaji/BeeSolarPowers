@@ -45,8 +45,7 @@ export default function AdminClientsPage() {
     return (
       user.username.toLowerCase().includes(searchTermLower) ||
       user.email?.toLowerCase().includes(searchTermLower) ||
-      user.fullName?.toLowerCase().includes(searchTermLower) ||
-      user.phone?.toLowerCase().includes(searchTermLower)
+      user.name?.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -114,9 +113,9 @@ export default function AdminClientsPage() {
                       <TableRow key={user.id}>
                         <TableCell>{user.id}</TableCell>
                         <TableCell>{user.username}</TableCell>
-                        <TableCell>{user.fullName || "—"}</TableCell>
+                        <TableCell>{user.name || "—"}</TableCell>
                         <TableCell>{user.email || "—"}</TableCell>
-                        <TableCell>{user.phone || "—"}</TableCell>
+                        <TableCell>—</TableCell>
                         <TableCell>
                           <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
                             user.role === "admin" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
