@@ -27,8 +27,8 @@ const Products: React.FC = () => {
     queryKey: ['/api/products', activeCategory],
     queryFn: async ({ queryKey }) => {
       const [_, category] = queryKey;
-      const url = category && category !== "all"
-        ? `/api/products?category=${encodeURIComponent(category)}`
+      const url = category && category !== "all" && typeof category === 'string'
+        ? `/api/products?category=${encodeURIComponent(category)}` 
         : "/api/products";
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch products");

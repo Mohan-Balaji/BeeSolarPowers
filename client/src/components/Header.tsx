@@ -44,13 +44,15 @@ const Header: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <a className={cn(
+              <Link 
+                key={link.href} 
+                href={link.href}
+                className={cn(
                   "font-medium transition-colors duration-200",
                   location === link.href ? "text-accent" : "text-primary hover:text-accent"
-                )}>
-                  {link.label}
-                </a>
+                )}
+              >
+                {link.label}
               </Link>
             ))}
             <Link href="/contact#quote">
@@ -71,18 +73,18 @@ const Header: React.FC = () => {
             <SheetContent side="right" className="w-[80%] sm:w-[350px]">
               <nav className="flex flex-col space-y-4 mt-8">
                 {navLinks.map((link) => (
-                  <Link key={link.href} href={link.href}>
-                    <a
-                      className={cn(
-                        "font-medium py-2 px-4 rounded-md transition-colors duration-200",
-                        location === link.href
-                          ? "bg-primary text-white"
-                          : "text-primary hover:bg-gray-100"
-                      )}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.label}
-                    </a>
+                  <Link 
+                    key={link.href} 
+                    href={link.href}
+                    className={cn(
+                      "font-medium py-2 px-4 rounded-md transition-colors duration-200",
+                      location === link.href
+                        ? "bg-primary text-white"
+                        : "text-primary hover:bg-gray-100"
+                    )}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.label}
                   </Link>
                 ))}
                 <Link href="/contact#quote">
