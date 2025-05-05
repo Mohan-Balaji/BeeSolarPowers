@@ -35,13 +35,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const AuthPage: React.FC = () => {
   const { user, loginMutation, registerMutation } = useAuth();
   const [_, navigate] = useLocation();
-
-  // Redirect if already logged in
-  if (user) {
-    navigate('/');
-    return null;
-  }
-
+  
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -59,6 +53,13 @@ const AuthPage: React.FC = () => {
       email: '',
     },
   });
+  
+  // Redirect if already logged in - after all hooks have been called
+  React.useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {

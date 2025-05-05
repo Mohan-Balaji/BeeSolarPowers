@@ -56,8 +56,13 @@ const Header: React.FC = () => {
               </Link>
             ))}
             <Link href="/contact#quote">
-              <Button className="bg-secondary hover:bg-secondary-dark text-primary font-semibold">
+              <Button className="bg-secondary hover:bg-secondary-dark text-primary font-semibold mr-2">
                 Get Quote
+              </Button>
+            </Link>
+            <Link href="/auth">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+                Login / Register
               </Button>
             </Link>
           </nav>
@@ -93,6 +98,15 @@ const Header: React.FC = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Quote
+                  </Button>
+                </Link>
+                <Link href="/auth">
+                  <Button
+                    variant="outline"
+                    className="border-primary text-primary hover:bg-primary hover:text-white w-full mt-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Login / Register
                   </Button>
                 </Link>
               </nav>

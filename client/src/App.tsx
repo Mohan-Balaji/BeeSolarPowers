@@ -29,8 +29,8 @@ function Router() {
         <Route path="/auth" component={AuthPage} />
         {/* Protected routes - requires authentication */}
         <ProtectedRoute path="/dashboard" component={Dashboard} />
-        <ProtectedRoute path="/installations" component={() => <div>Installations Coming Soon</div>} />
-        <ProtectedRoute path="/profile" component={() => <div>Profile Coming Soon</div>} />
+        <ProtectedRoute path="/installations" component={function Installations() { return <div>Installations Coming Soon</div>; }} />
+        <ProtectedRoute path="/profile" component={function Profile() { return <div>Profile Coming Soon</div>; }} />
         <ProtectedRoute path="/admin/installations" component={AdminInstallations} />
         <Route component={NotFound} />
       </Switch>
