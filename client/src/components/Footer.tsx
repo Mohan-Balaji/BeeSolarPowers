@@ -44,28 +44,43 @@ const Footer: React.FC = () => {
             <h3 className="font-heading font-semibold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Home</a>
+                <Link 
+                  href="/"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Home
                 </Link>
               </li>
               <li>
-                <Link href="/about">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">About Us</a>
+                <Link 
+                  href="/about"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  About Us
                 </Link>
               </li>
               <li>
-                <Link href="/products">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Products</a>
+                <Link 
+                  href="/products"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Products
                 </Link>
               </li>
               <li>
-                <Link href="/services">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Services</a>
+                <Link 
+                  href="/services"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Services
                 </Link>
               </li>
               <li>
-                <Link href="/contact">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Contact</a>
+                <Link 
+                  href="/contact"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Contact
                 </Link>
               </li>
             </ul>
@@ -76,28 +91,43 @@ const Footer: React.FC = () => {
             <h3 className="font-heading font-semibold text-lg mb-4">Our Products</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/products?category=solar-panels">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Solar Panels</a>
+                <Link 
+                  href="/products?category=solar-panels"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Solar Panels
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=inverters">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Inverters</a>
+                <Link 
+                  href="/products?category=inverters"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Inverters
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=batteries">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Batteries</a>
+                <Link 
+                  href="/products?category=batteries"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Batteries
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=complete-systems">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Complete Systems</a>
+                <Link 
+                  href="/products?category=complete-systems"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Complete Systems
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=accessories">
-                  <a className="text-gray-300 hover:text-white transition-colors duration-200">Accessories</a>
+                <Link 
+                  href="/products?category=accessories"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Accessories
                 </Link>
               </li>
             </ul>

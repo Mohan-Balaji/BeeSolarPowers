@@ -124,10 +124,10 @@ const ContactSection: React.FC = () => {
               <h3 className="font-heading font-semibold text-xl mb-2 text-primary">{info.title}</h3>
               <p className="text-gray-600">
                 {info.details.map((detail, i) => (
-                  <React.Fragment key={i}>
+                  <span key={i}>
                     {detail}
                     {i < info.details.length - 1 && <br />}
-                  </React.Fragment>
+                  </span>
                 ))}
               </p>
             </div>
