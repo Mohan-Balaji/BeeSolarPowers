@@ -15,11 +15,19 @@ export function formatCurrency(value: number | string): string {
   return `₹${numValue.toLocaleString('en-IN')}`;
 }
 
-export function calculateSolarSystem(monthlyBill: number, location: string) {
-  // Simple calculation logic (in a real app, this would be more sophisticated)
-  const systemSize = Math.ceil(monthlyBill / 1000); // kW
+export function calculateSolarSystem(monthlyBill: number, location: string, systemSizeKw?: number) {
+  // If systemSize is provided, use it; otherwise calculate based on bill
+  const systemSize = systemSizeKw !== undefined 
+    ? systemSizeKw 
+    : Math.ceil(monthlyBill / 1000); // kW
+    
+  // Estimate system cost - higher efficiency for custom sizes
   const systemCost = systemSize * 70000;
-  const monthlySavings = monthlyBill * 0.85;
+  
+  // Calculate savings based on system size and monthly bill
+  // For smaller systems, savings are proportional to system size
+  const savingsRatio = Math.min(0.85, systemSize * 0.15); // Cap at 85%
+  const monthlySavings = monthlyBill * savingsRatio;
   const annualSavings = monthlySavings * 12;
   const roi = (systemCost / annualSavings).toFixed(1);
   

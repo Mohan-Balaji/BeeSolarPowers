@@ -38,25 +38,54 @@ export interface CalculatorResult {
 export function Calculator({ onRequestQuote, onSaveResult }: CalculatorProps) {
   const [monthlyBill, setMonthlyBill] = useState<string>("");
   const [location, setLocation] = useState<string>("");
+  const [systemSize, setSystemSize] = useState<string>("3");
+  const [customSize, setCustomSize] = useState<string>("");
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState<boolean>(false);
+  const [showCustomField, setShowCustomField] = useState<boolean>(false);
+
+  // Handle system size change
+  const handleSystemSizeChange = (value: string) => {
+    setSystemSize(value);
+    if (value === "custom") {
+      setShowCustomField(true);
+    } else {
+      setShowCustomField(false);
+    }
+  };
 
   const handleCalculate = () => {
-    if (!monthlyBill || !location) return;
+    if (!monthlyBill || !location || (systemSize === "custom" && !customSize)) return;
 
     setCalculating(true);
     
+    // Get the kW value
+    const kwSize = systemSize === "custom" 
+      ? parseFloat(customSize) 
+      : parseFloat(systemSize);
+      
     // In a real app, this could be an API call
     setTimeout(() => {
-      const calculationResult = calculateSolarSystem(parseFloat(monthlyBill), location);
-      setResult(calculationResult);
+      const calculationResult = calculateSolarSystem(
+        parseFloat(monthlyBill), 
+        location, 
+        kwSize // Pass the selected or custom kW
+      );
+      
+      const fullResult: CalculatorResult = {
+        monthlyBill: parseFloat(monthlyBill),
+        location,
+        systemSize: calculationResult.systemSize,
+        systemCost: calculationResult.systemCost,
+        monthlySavings: calculationResult.monthlySavings,
+        annualSavings: calculationResult.annualSavings,
+        roiPeriod: calculationResult.roiPeriod
+      };
+      
+      setResult(fullResult);
       
       if (onSaveResult) {
-        onSaveResult({
-          monthlyBill: parseFloat(monthlyBill),
-          location,
-          ...calculationResult
-        });
+        onSaveResult(fullResult);
       }
       
       setCalculating(false);
@@ -99,9 +128,44 @@ export function Calculator({ onRequestQuote, onSaveResult }: CalculatorProps) {
           </Select>
         </div>
         
+        <div>
+          <Label htmlFor="system-size" className="text-gray-200 font-medium mb-2">
+            System Size (kW)
+          </Label>
+          <Select value={systemSize} onValueChange={handleSystemSizeChange}>
+            <SelectTrigger id="system-size" className="w-full p-3 bg-white text-primary focus:ring-2 focus:ring-secondary h-12">
+              <SelectValue placeholder="Select system size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 kW</SelectItem>
+              <SelectItem value="2">2 kW</SelectItem>
+              <SelectItem value="3">3 kW</SelectItem>
+              <SelectItem value="4">4 kW</SelectItem>
+              <SelectItem value="5">5 kW</SelectItem>
+              <SelectItem value="custom">Custom Size</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {showCustomField && (
+          <div>
+            <Label htmlFor="custom-size" className="text-gray-200 font-medium mb-2">
+              Enter Custom Size (kW)
+            </Label>
+            <Input
+              id="custom-size"
+              type="number"
+              value={customSize}
+              onChange={(e) => setCustomSize(e.target.value)}
+              placeholder="e.g. 7.5"
+              className="w-full p-3 rounded-md text-primary focus:outline-none focus:ring-2 focus:ring-secondary"
+            />
+          </div>
+        )}
+        
         <Button
           onClick={handleCalculate}
-          disabled={!monthlyBill || !location || calculating}
+          disabled={!monthlyBill || !location || (systemSize === "custom" && !customSize) || calculating}
           className="w-full bg-secondary hover:bg-secondary-dark text-primary font-bold py-3 px-6 rounded-md transition-colors duration-200 h-12"
         >
           {calculating ? "Calculating..." : "Calculate Savings"}
@@ -116,7 +180,7 @@ export function Calculator({ onRequestQuote, onSaveResult }: CalculatorProps) {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-gray-600 text-sm">Recommended System Size</p>
+                <p className="text-gray-600 text-sm">Selected System Size</p>
                 <p className="font-heading font-bold text-primary text-2xl">{result.systemSize} kW</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg">
