@@ -128,6 +128,30 @@ export const storage = {
   async getAllUsers() {
     return db.select().from(schema.users).orderBy(desc(schema.users.createdAt));
   },
+  
+  async updateUser(id: number, userData: { name: string, email: string, role: string }) {
+    const [updatedUser] = await db
+      .update(schema.users)
+      .set({
+        name: userData.name,
+        email: userData.email,
+        role: userData.role
+      })
+      .where(eq(schema.users.id, id))
+      .returning();
+    return updatedUser;
+  },
+  
+  async updateUserPassword(id: number, hashedPassword: string) {
+    const [updatedUser] = await db
+      .update(schema.users)
+      .set({
+        password: hashedPassword
+      })
+      .where(eq(schema.users.id, id))
+      .returning();
+    return updatedUser;
+  },
 
   // Installations
   async createInstallation(installation: InsertInstallation) {

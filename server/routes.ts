@@ -11,7 +11,7 @@ import {
   users,
   products
 } from "@shared/schema";
-import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
 import { z } from "zod";
 import { db } from "../db";
 import { eq, and } from "drizzle-orm";
@@ -302,6 +302,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching users:", error);
       return res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+  
+  // Update user (admin only)
+  app.patch(`${apiPrefix}/admin/users/:id`, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      // Validate the update data
+      const { name, email, role } = req.body;
+      if (!name || !email || !role) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      // Check if the user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(userId, { name, email, role });
+      return res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+  
+  // Change user password (admin only)
+  app.patch(`${apiPrefix}/admin/users/:id/password`, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      const { password } = req.body;
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+      
+      // Check if the user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Hash the new password and update
+      const hashedPassword = await hashPassword(password);
+      const updatedUser = await storage.updateUserPassword(userId, hashedPassword);
+      
+      // Return success but omit password from response
+      return res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        createdAt: updatedUser.createdAt
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      return res.status(500).json({ error: "Failed to change password" });
     }
   });
 
