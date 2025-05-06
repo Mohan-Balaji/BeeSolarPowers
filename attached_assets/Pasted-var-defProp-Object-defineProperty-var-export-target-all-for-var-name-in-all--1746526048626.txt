@@ -1,0 +1,960 @@
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// server/index.ts
+import express2 from "express";
+
+// server/routes.ts
+import { createServer } from "http";
+
+// db/index.ts
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import ws from "ws";
+
+// shared/schema.ts
+var schema_exports = {};
+__export(schema_exports, {
+  calculatorResults: () => calculatorResults,
+  categories: () => categories,
+  categoriesRelations: () => categoriesRelations,
+  contactSubmissions: () => contactSubmissions,
+  insertCalculatorResultSchema: () => insertCalculatorResultSchema,
+  insertCategorySchema: () => insertCategorySchema,
+  insertContactSubmissionSchema: () => insertContactSubmissionSchema,
+  insertInstallationSchema: () => insertInstallationSchema,
+  insertProductSchema: () => insertProductSchema,
+  insertQuoteRequestSchema: () => insertQuoteRequestSchema,
+  insertSettingSchema: () => insertSettingSchema,
+  insertSubsidySchema: () => insertSubsidySchema,
+  insertTestimonialSchema: () => insertTestimonialSchema,
+  insertUserSchema: () => insertUserSchema,
+  installations: () => installations,
+  installationsRelations: () => installationsRelations,
+  products: () => products,
+  productsRelations: () => productsRelations,
+  quoteRequests: () => quoteRequests,
+  settings: () => settings,
+  subsidies: () => subsidies,
+  testimonials: () => testimonials,
+  users: () => users,
+  usersRelations: () => usersRelations
+});
+import { pgTable, text, serial, integer, boolean, timestamp, numeric } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
+var users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull().default("client"),
+  // admin or client
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+var installations = pgTable("installations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  status: text("status").notNull().default("pending"),
+  // pending, in-progress, completed
+  installationDate: timestamp("installation_date"),
+  completionDate: timestamp("completion_date"),
+  notes: text("notes"),
+  location: text("location").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+var products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  discountPrice: numeric("discount_price", { precision: 10, scale: 2 }),
+  imageUrl: text("image_url").notNull(),
+  rating: numeric("rating", { precision: 2, scale: 1 }),
+  featured: boolean("featured").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+var categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+var testimonials = pgTable("testimonials", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  location: text("location").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  rating: integer("rating").notNull(),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+var contactSubmissions = pgTable("contact_submissions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject"),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  viewed: boolean("viewed").default(false)
+});
+var quoteRequests = pgTable("quote_requests", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  address: text("address"),
+  city: text("city"),
+  pincode: text("pincode"),
+  interested: text("interested").notNull(),
+  comments: text("comments"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  viewed: boolean("viewed").default(false)
+});
+var calculatorResults = pgTable("calculator_results", {
+  id: serial("id").primaryKey(),
+  monthlyBill: numeric("monthly_bill", { precision: 10, scale: 2 }).notNull(),
+  location: text("location").notNull(),
+  systemSize: numeric("system_size", { precision: 5, scale: 2 }).notNull(),
+  systemCost: numeric("system_cost", { precision: 12, scale: 2 }).notNull(),
+  monthlySavings: numeric("monthly_savings", { precision: 10, scale: 2 }).notNull(),
+  annualSavings: numeric("annual_savings", { precision: 10, scale: 2 }).notNull(),
+  roiPeriod: numeric("roi_period", { precision: 4, scale: 1 }).notNull(),
+  email: text("email"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+var subsidies = pgTable("subsidies", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  eligibility: text("eligibility").notNull(),
+  amount: text("amount").notNull(),
+  applicationProcess: text("application_process").notNull(),
+  documentationRequired: text("documentation_required").notNull(),
+  region: text("region").notNull(),
+  // State, region, or "National"
+  active: boolean("active").default(true),
+  expiryDate: timestamp("expiry_date"),
+  source: text("source").notNull(),
+  // Source of information like government website
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+var settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+var productsRelations = relations(products, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [products.category],
+    references: [categories.name]
+  }),
+  installations: many(installations)
+}));
+var categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products)
+}));
+var usersRelations = relations(users, ({ many }) => ({
+  installations: many(installations)
+}));
+var installationsRelations = relations(installations, ({ one }) => ({
+  user: one(users, {
+    fields: [installations.userId],
+    references: [users.id]
+  }),
+  product: one(products, {
+    fields: [installations.productId],
+    references: [products.id]
+  })
+}));
+var insertUserSchema = createInsertSchema(users, {
+  username: (schema) => schema.min(3, "Username must be at least 3 characters"),
+  password: (schema) => schema.min(6, "Password must be at least 6 characters"),
+  name: (schema) => schema.min(2, "Name must be at least 2 characters"),
+  email: (schema) => schema.email("Must provide a valid email"),
+  role: (schema) => schema.refine((val) => ["admin", "client"].includes(val), {
+    message: "Role must be either 'admin' or 'client'"
+  })
+});
+var insertInstallationSchema = createInsertSchema(installations, {
+  location: (schema) => schema.min(3, "Location must be at least 3 characters"),
+  status: (schema) => schema.refine((val) => ["pending", "in-progress", "completed"].includes(val), {
+    message: "Status must be 'pending', 'in-progress', or 'completed'"
+  })
+});
+var insertProductSchema = createInsertSchema(products, {
+  name: (schema) => schema.min(3, "Product name must be at least 3 characters"),
+  description: (schema) => schema.min(10, "Description must be at least 10 characters"),
+  price: (schema) => schema.refine((val) => Number(val) > 0, { message: "Price must be positive" })
+});
+var insertCategorySchema = createInsertSchema(categories, {
+  name: (schema) => schema.min(2, "Category name must be at least 2 characters"),
+  slug: (schema) => schema.min(2, "Slug must be at least 2 characters")
+});
+var insertTestimonialSchema = createInsertSchema(testimonials, {
+  name: (schema) => schema.min(2, "Name must be at least 2 characters"),
+  content: (schema) => schema.min(10, "Content must be at least 10 characters"),
+  rating: (schema) => schema.min(1, "Rating must be at least 1").max(5, "Rating cannot be more than 5")
+});
+var insertContactSubmissionSchema = createInsertSchema(contactSubmissions, {
+  name: (schema) => schema.min(2, "Name must be at least 2 characters"),
+  email: (schema) => schema.email("Must provide a valid email"),
+  message: (schema) => schema.min(10, "Message must be at least 10 characters")
+});
+var insertQuoteRequestSchema = createInsertSchema(quoteRequests, {
+  firstName: (schema) => schema.min(2, "First name must be at least 2 characters"),
+  lastName: (schema) => schema.min(2, "Last name must be at least 2 characters"),
+  email: (schema) => schema.email("Must provide a valid email"),
+  phone: (schema) => schema.min(10, "Phone number must be at least 10 characters")
+});
+var insertCalculatorResultSchema = createInsertSchema(calculatorResults, {
+  monthlyBill: (schema) => schema.refine((val) => Number(val) > 0, { message: "Monthly bill must be positive" }),
+  location: (schema) => schema.min(2, "Location must be at least 2 characters"),
+  systemSize: (schema) => schema.refine((val) => Number(val) > 0, { message: "System size must be positive" }),
+  systemCost: (schema) => schema.refine((val) => Number(val) > 0, { message: "System cost must be positive" }),
+  monthlySavings: (schema) => schema.refine((val) => Number(val) > 0, { message: "Monthly savings must be positive" }),
+  annualSavings: (schema) => schema.refine((val) => Number(val) > 0, { message: "Annual savings must be positive" }),
+  roiPeriod: (schema) => schema.refine((val) => Number(val) > 0, { message: "ROI period must be positive" })
+});
+var insertSubsidySchema = createInsertSchema(subsidies, {
+  title: (schema) => schema.min(5, "Title must be at least 5 characters"),
+  description: (schema) => schema.min(10, "Description must be at least 10 characters"),
+  eligibility: (schema) => schema.min(10, "Eligibility must be at least 10 characters"),
+  amount: (schema) => schema.min(2, "Amount must be at least 2 characters"),
+  applicationProcess: (schema) => schema.min(10, "Application process must be at least 10 characters"),
+  documentationRequired: (schema) => schema.min(10, "Documentation requirements must be at least 10 characters"),
+  region: (schema) => schema.min(2, "Region must be at least 2 characters"),
+  source: (schema) => schema.min(5, "Source must be at least 5 characters")
+});
+var insertSettingSchema = createInsertSchema(settings, {
+  key: (schema) => schema.min(2, "Key must be at least 2 characters"),
+  value: (schema) => schema.min(1, "Value cannot be empty")
+});
+
+// db/index.ts
+neonConfig.webSocketConstructor = ws;
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?"
+  );
+}
+var pool = new Pool({ connectionString: process.env.DATABASE_URL });
+var db = drizzle({ client: pool, schema: schema_exports });
+
+// server/storage.ts
+import { eq, desc, like } from "drizzle-orm";
+var storage = {
+  // Products
+  async getAllProducts() {
+    return db.select().from(products).orderBy(desc(products.createdAt));
+  },
+  async getProductsByCategory(categoryName) {
+    if (categoryName === "all" || !categoryName) {
+      return this.getAllProducts();
+    }
+    return db.select().from(products).where(eq(products.category, categoryName));
+  },
+  async getFeaturedProducts() {
+    return db.select().from(products).where(eq(products.featured, true));
+  },
+  async getProductById(id) {
+    const results = await db.select().from(products).where(eq(products.id, id));
+    return results.length > 0 ? results[0] : null;
+  },
+  async insertProduct(product) {
+    const [insertedProduct] = await db.insert(products).values(product).returning();
+    return insertedProduct;
+  },
+  // Categories
+  async getAllCategories() {
+    return db.select().from(categories).orderBy(categories.name);
+  },
+  async getCategoryBySlug(slug) {
+    const results = await db.select().from(categories).where(eq(categories.slug, slug));
+    return results.length > 0 ? results[0] : null;
+  },
+  async insertCategory(category) {
+    const [insertedCategory] = await db.insert(categories).values(category).returning();
+    return insertedCategory;
+  },
+  // Testimonials
+  async getAllTestimonials() {
+    return db.select().from(testimonials).orderBy(desc(testimonials.createdAt));
+  },
+  async insertTestimonial(testimonial) {
+    const [insertedTestimonial] = await db.insert(testimonials).values(testimonial).returning();
+    return insertedTestimonial;
+  },
+  // Contact form submissions
+  async submitContactForm(submission) {
+    const [insertedSubmission] = await db.insert(contactSubmissions).values(submission).returning();
+    return insertedSubmission;
+  },
+  async getContactSubmissions() {
+    return db.select().from(contactSubmissions).orderBy(desc(contactSubmissions.createdAt));
+  },
+  // Quote requests
+  async submitQuoteRequest(request) {
+    const [insertedRequest] = await db.insert(quoteRequests).values(request).returning();
+    return insertedRequest;
+  },
+  async getQuoteRequests() {
+    return db.select().from(quoteRequests).orderBy(desc(quoteRequests.createdAt));
+  },
+  // Calculator results
+  async saveCalculatorResult(result) {
+    const [insertedResult] = await db.insert(calculatorResults).values(result).returning();
+    return insertedResult;
+  },
+  async getCalculatorResults() {
+    return db.select().from(calculatorResults).orderBy(desc(calculatorResults.createdAt));
+  },
+  // Settings
+  async getAllSettings() {
+    return db.select().from(settings);
+  },
+  async getSettingByKey(key) {
+    const results = await db.select().from(settings).where(eq(settings.key, key));
+    return results.length > 0 ? results[0].value : null;
+  },
+  async getMultipleSettingsByKeyPrefix(prefix) {
+    return db.select().from(settings).where(like(settings.key, `${prefix}%`));
+  },
+  // User Management
+  async createUser(user) {
+    const [insertedUser] = await db.insert(users).values(user).returning();
+    return insertedUser;
+  },
+  async getUser(id) {
+    const results = await db.select().from(users).where(eq(users.id, id));
+    return results.length > 0 ? results[0] : null;
+  },
+  async getUserByUsername(username) {
+    const results = await db.select().from(users).where(eq(users.username, username));
+    return results.length > 0 ? results[0] : null;
+  },
+  async getAllUsers() {
+    return db.select().from(users).orderBy(desc(users.createdAt));
+  },
+  async updateUser(id, userData) {
+    const [updatedUser] = await db.update(users).set({
+      name: userData.name,
+      email: userData.email,
+      role: userData.role
+    }).where(eq(users.id, id)).returning();
+    return updatedUser;
+  },
+  async updateUserPassword(id, hashedPassword) {
+    const [updatedUser] = await db.update(users).set({
+      password: hashedPassword
+    }).where(eq(users.id, id)).returning();
+    return updatedUser;
+  },
+  // Installations
+  async createInstallation(installation) {
+    const [insertedInstallation] = await db.insert(installations).values(installation).returning();
+    return insertedInstallation;
+  },
+  async getInstallationsForUser(userId) {
+    return db.select().from(installations).where(eq(installations.userId, userId)).orderBy(desc(installations.createdAt));
+  },
+  async getInstallationById(id) {
+    const results = await db.select().from(installations).where(eq(installations.id, id));
+    return results.length > 0 ? results[0] : null;
+  },
+  async updateInstallationStatus(id, status) {
+    const [updatedInstallation] = await db.update(installations).set({
+      status,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(installations.id, id)).returning();
+    return updatedInstallation;
+  },
+  // Government Subsidies
+  async createSubsidy(subsidy) {
+    const [insertedSubsidy] = await db.insert(subsidies).values(subsidy).returning();
+    return insertedSubsidy;
+  },
+  async getAllSubsidies() {
+    return db.select().from(subsidies).where(eq(subsidies.active, true)).orderBy(subsidies.region);
+  },
+  async getSubsidyById(id) {
+    const results = await db.select().from(subsidies).where(eq(subsidies.id, id));
+    return results.length > 0 ? results[0] : null;
+  },
+  async getSubsidiesByRegion(region) {
+    return db.select().from(subsidies).where(
+      eq(subsidies.region, region) && eq(subsidies.active, true)
+    );
+  }
+};
+
+// server/auth.ts
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import session from "express-session";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+var scryptAsync = promisify(scrypt);
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = await scryptAsync(password, salt, 64);
+  return `${buf.toString("hex")}.${salt}`;
+}
+async function comparePasswords(supplied, stored) {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = await scryptAsync(supplied, salt, 64);
+  return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+async function setupAuth(app2) {
+  const sessionStore = new session.MemoryStore();
+  const sessionSettings = {
+    secret: process.env.SESSION_SECRET || "bee-solar-powers-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    store: sessionStore,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1e3,
+      // 30 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production"
+    }
+  };
+  app2.set("trust proxy", 1);
+  app2.use(session(sessionSettings));
+  app2.use(passport.initialize());
+  app2.use(passport.session());
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+        const isValid = await comparePasswords(password, user.password);
+        if (!isValid) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
+    })
+  );
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (err) {
+      done(err);
+    }
+  });
+  app2.post("/api/register", async (req, res, next) => {
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+      const hashedPassword = await hashPassword(req.body.password);
+      const userData = {
+        ...req.body,
+        role: req.body.role || "client",
+        password: hashedPassword
+      };
+      const user = await storage.createUser(userData);
+      req.login(user, (err) => {
+        if (err) return next(err);
+        return res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Failed to register user" });
+    }
+  });
+  app2.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
+      if (!user) {
+        return res.status(401).json({ error: info?.message || "Authentication failed" });
+      }
+      req.login(user, (err2) => {
+        if (err2) return next(err2);
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
+  app2.post("/api/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.sendStatus(200);
+    });
+  });
+  app2.get("/api/user", (req, res) => {
+    if (req.isAuthenticated()) {
+      return res.json(req.user);
+    }
+    res.status(401).json({ error: "Not authenticated" });
+  });
+}
+function isAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: "Authentication required" });
+}
+function isAdmin(req, res, next) {
+  if (req.isAuthenticated() && req.user.role === "admin") {
+    return next();
+  }
+  res.status(403).json({ error: "Admin access required" });
+}
+
+// server/routes.ts
+import { z } from "zod";
+import { eq as eq2 } from "drizzle-orm";
+async function registerRoutes(app2) {
+  await setupAuth(app2);
+  const apiPrefix = "/api";
+  app2.get(`${apiPrefix}/products`, async (req, res) => {
+    try {
+      const category = req.query.category;
+      let products3;
+      if (category && category !== "all") {
+        products3 = await storage.getProductsByCategory(category);
+      } else {
+        products3 = await storage.getAllProducts();
+      }
+      return res.json(products3);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+  app2.get(`${apiPrefix}/products/featured`, async (req, res) => {
+    try {
+      const products3 = await storage.getFeaturedProducts();
+      return res.json(products3);
+    } catch (error) {
+      console.error("Error fetching featured products:", error);
+      return res.status(500).json({ error: "Failed to fetch featured products" });
+    }
+  });
+  app2.get(`${apiPrefix}/products/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid product ID" });
+      }
+      const product = await storage.getProductById(id);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      return res.json(product);
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      return res.status(500).json({ error: "Failed to fetch product" });
+    }
+  });
+  app2.get(`${apiPrefix}/categories`, async (req, res) => {
+    try {
+      const categories2 = await storage.getAllCategories();
+      return res.json(categories2);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      return res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+  app2.get(`${apiPrefix}/testimonials`, async (req, res) => {
+    try {
+      const testimonials2 = await storage.getAllTestimonials();
+      return res.json(testimonials2);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      return res.status(500).json({ error: "Failed to fetch testimonials" });
+    }
+  });
+  app2.post(`${apiPrefix}/contact`, async (req, res) => {
+    try {
+      const validatedData = insertContactSubmissionSchema.parse(req.body);
+      const submission = await storage.submitContactForm(validatedData);
+      return res.status(201).json({
+        success: true,
+        message: "Contact form submitted successfully",
+        id: submission.id
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      console.error("Error submitting contact form:", error);
+      return res.status(500).json({ error: "Failed to submit contact form" });
+    }
+  });
+  app2.post(`${apiPrefix}/quote`, async (req, res) => {
+    try {
+      const validatedData = insertQuoteRequestSchema.parse(req.body);
+      const request = await storage.submitQuoteRequest(validatedData);
+      return res.status(201).json({
+        success: true,
+        message: "Quote request submitted successfully",
+        id: request.id
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      console.error("Error submitting quote request:", error);
+      return res.status(500).json({ error: "Failed to submit quote request" });
+    }
+  });
+  app2.post(`${apiPrefix}/calculator`, async (req, res) => {
+    try {
+      const validatedData = insertCalculatorResultSchema.parse(req.body);
+      const result = await storage.saveCalculatorResult(validatedData);
+      return res.status(201).json({
+        success: true,
+        message: "Calculator result saved successfully",
+        id: result.id
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      console.error("Error saving calculator result:", error);
+      return res.status(500).json({ error: "Failed to save calculator result" });
+    }
+  });
+  app2.get(`${apiPrefix}/settings`, async (req, res) => {
+    try {
+      const settings2 = await storage.getAllSettings();
+      const settingsObject = {};
+      settings2.forEach((setting) => {
+        settingsObject[setting.key] = setting.value;
+      });
+      return res.json(settingsObject);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      return res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+  app2.get(`${apiPrefix}/settings/:prefix`, async (req, res) => {
+    try {
+      const prefix = req.params.prefix;
+      const settings2 = await storage.getMultipleSettingsByKeyPrefix(prefix);
+      const settingsObject = {};
+      settings2.forEach((setting) => {
+        settingsObject[setting.key] = setting.value;
+      });
+      return res.json(settingsObject);
+    } catch (error) {
+      console.error("Error fetching settings by prefix:", error);
+      return res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+  app2.get(`${apiPrefix}/installations/user/:userId`, isAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      if (req.user && (req.user.id !== userId && req.user.role !== "admin")) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      const userInstallations = await db.query.installations.findMany({
+        where: eq2(installations.userId, userId),
+        with: {
+          product: true
+        }
+      });
+      return res.json(userInstallations);
+    } catch (error) {
+      console.error("Error fetching user installations:", error);
+      return res.status(500).json({ error: "Failed to fetch installations" });
+    }
+  });
+  app2.get(`${apiPrefix}/admin/installations`, isAdmin, async (req, res) => {
+    try {
+      const allInstallations = await db.query.installations.findMany({
+        with: {
+          product: true,
+          user: true
+        }
+      });
+      return res.json(allInstallations);
+    } catch (error) {
+      console.error("Error fetching all installations:", error);
+      return res.status(500).json({ error: "Failed to fetch installations" });
+    }
+  });
+  app2.patch(`${apiPrefix}/admin/installations/:id`, isAdmin, async (req, res) => {
+    try {
+      const installationId = parseInt(req.params.id);
+      if (isNaN(installationId)) {
+        return res.status(400).json({ error: "Invalid installation ID" });
+      }
+      const { status, notes, installationDate, completionDate } = req.body;
+      const existingInstallation = await db.query.installations.findFirst({
+        where: eq2(installations.id, installationId)
+      });
+      if (!existingInstallation) {
+        return res.status(404).json({ error: "Installation not found" });
+      }
+      const [updatedInstallation] = await db.update(installations).set({
+        status: status || existingInstallation.status,
+        notes: notes !== void 0 ? notes : existingInstallation.notes,
+        installationDate: installationDate ? new Date(installationDate) : existingInstallation.installationDate,
+        completionDate: completionDate ? new Date(completionDate) : existingInstallation.completionDate,
+        updatedAt: /* @__PURE__ */ new Date()
+      }).where(eq2(installations.id, installationId)).returning();
+      return res.json(updatedInstallation);
+    } catch (error) {
+      console.error("Error updating installation:", error);
+      return res.status(500).json({ error: "Failed to update installation" });
+    }
+  });
+  app2.post(`${apiPrefix}/admin/installations`, isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertInstallationSchema.parse(req.body);
+      const installation = await storage.createInstallation(validatedData);
+      return res.status(201).json(installation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      console.error("Error creating installation:", error);
+      return res.status(500).json({ error: "Failed to create installation" });
+    }
+  });
+  app2.get(`${apiPrefix}/admin/users`, isAdmin, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      return res.json(allUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+  app2.patch(`${apiPrefix}/admin/users/:id`, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      const { name, email, role } = req.body;
+      if (!name || !email || !role) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const updatedUser = await storage.updateUser(userId, { name, email, role });
+      return res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+  app2.patch(`${apiPrefix}/admin/users/:id/password`, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      const { password } = req.body;
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const hashedPassword = await hashPassword(password);
+      const updatedUser = await storage.updateUserPassword(userId, hashedPassword);
+      return res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        createdAt: updatedUser.createdAt
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      return res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+  const httpServer = createServer(app2);
+  return httpServer;
+}
+
+// server/vite.ts
+import express from "express";
+import fs from "fs";
+import path2 from "path";
+import { createServer as createViteServer, createLogger } from "vite";
+
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+var vite_config_default = defineConfig({
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+    ...process.env.NODE_ENV !== "production" && process.env.REPL_ID !== void 0 ? [
+      await import("@replit/vite-plugin-cartographer").then(
+        (m) => m.cartographer()
+      )
+    ] : []
+  ],
+  resolve: {
+    alias: {
+      "@db": path.resolve(import.meta.dirname, "db"),
+      "@": path.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@assets": path.resolve(import.meta.dirname, "attached_assets")
+    }
+  },
+  root: path.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true
+  }
+});
+
+// server/vite.ts
+import { nanoid } from "nanoid";
+var viteLogger = createLogger();
+function log(message, source = "express") {
+  const formattedTime = (/* @__PURE__ */ new Date()).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+async function setupVite(app2, server) {
+  const serverOptions = {
+    middlewareMode: true,
+    hmr: { server },
+    allowedHosts: true
+  };
+  const vite = await createViteServer({
+    ...vite_config_default,
+    configFile: false,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      }
+    },
+    server: serverOptions,
+    appType: "custom"
+  });
+  app2.use(vite.middlewares);
+  app2.use("*", async (req, res, next) => {
+    const url = req.originalUrl;
+    try {
+      const clientTemplate = path2.resolve(
+        import.meta.dirname,
+        "..",
+        "client",
+        "index.html"
+      );
+      let template = await fs.promises.readFile(clientTemplate, "utf-8");
+      template = template.replace(
+        `src="/src/main.tsx"`,
+        `src="/src/main.tsx?v=${nanoid()}"`
+      );
+      const page = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+    } catch (e) {
+      vite.ssrFixStacktrace(e);
+      next(e);
+    }
+  });
+}
+function serveStatic(app2) {
+  const distPath = path2.resolve(import.meta.dirname, "public");
+  if (!fs.existsSync(distPath)) {
+    throw new Error(
+      `Could not find the build directory: ${distPath}, make sure to build the client first`
+    );
+  }
+  app2.use(express.static(distPath));
+  app2.use("*", (_req, res) => {
+    res.sendFile(path2.resolve(distPath, "index.html"));
+  });
+}
+
+// server/index.ts
+var app = express2();
+app.use(express2.json());
+app.use(express2.urlencoded({ extended: false }));
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path3 = req.path;
+  let capturedJsonResponse = void 0;
+  const originalResJson = res.json;
+  res.json = function(bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path3.startsWith("/api")) {
+      let logLine = `${req.method} ${path3} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "\u2026";
+      }
+      log(logLine);
+    }
+  });
+  next();
+});
+(async () => {
+  const server = await registerRoutes(app);
+  app.use((err, _req, res, _next) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    throw err;
+  });
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+  const port = 5e3;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true
+  }, () => {
+    log(`serving on port ${port}`);
+  });
+})();

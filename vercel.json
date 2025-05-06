@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "buildCommand": "./vercel-build.sh",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
