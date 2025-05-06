@@ -39,23 +39,24 @@ const getStatusPercentage = (status: string): number => {
 };
 
 const getStatusColor = (status: string): string => {
+  // Always return green with varying intensities based on status
   switch (status) {
     case 'pending':
-      return 'bg-yellow-500';
+      return 'bg-green-300';
     case 'approved':
-      return 'bg-blue-500';
+      return 'bg-green-400';
     case 'scheduled':
-      return 'bg-indigo-500';
-    case 'in_progress':
-      return 'bg-purple-500';
-    case 'installing':
-      return 'bg-pink-500';
-    case 'testing':
-      return 'bg-orange-500';
-    case 'completed':
       return 'bg-green-500';
+    case 'in_progress':
+      return 'bg-green-600';
+    case 'installing':
+      return 'bg-green-700';
+    case 'testing':
+      return 'bg-green-800';
+    case 'completed':
+      return 'bg-green-600';
     default:
-      return 'bg-gray-500';
+      return 'bg-green-300';
   }
 };
 
@@ -213,8 +214,8 @@ const InstallationTracker: React.FC = () => {
                   <p className="font-medium">{installation.product.name.split(' ')[2] || 'N/A'}</p>
                 </div>
                 <div className="bg-gray-50 p-2 rounded">
-                  <p className="text-gray-500 text-xs">Price</p>
-                  <p className="font-medium">{formatCurrency(installation.product.price)}</p>
+                  <p className="text-gray-500 text-xs">Model</p>
+                  <p className="font-medium">{installation.product.name.split(' ')[1] || 'Standard'}</p>
                 </div>
                 <div className="bg-gray-50 p-2 rounded">
                   <p className="text-gray-500 text-xs">Installation Date</p>

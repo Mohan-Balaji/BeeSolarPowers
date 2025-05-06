@@ -33,15 +33,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
         <p className="text-gray-600 mb-4">{product.description}</p>
         <div className="flex justify-between items-center">
-          <div>
-            <span className="font-heading font-bold text-primary text-xl">
-              {formatCurrency(product.price)}
+          <div className="flex items-center">
+            <span className="font-medium text-primary">
+              {product.name.split(' ')[2] || ''} {product.name.includes('kW') ? '' : 'kW'}
             </span>
-            {product.discountPrice && (
-              <span className="text-gray-500 line-through text-sm ml-2">
-                {formatCurrency(product.discountPrice)}
-              </span>
-            )}
+            <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded ml-2">
+              Available
+            </span>
           </div>
           <Link href="/contact#quote">
             <Button className="inline-flex items-center bg-primary hover:bg-primary-light text-white">
