@@ -10,52 +10,35 @@ interface SEOHeadProps {
   ogType?: string;
 }
 
-const SEOHead: React.FC<SEOHeadProps> = ({
-  title,
-  description,
-  keywords,
-  canonicalUrl,
-  ogImage = "https://images.unsplash.com/photo-1611365892117-bce37392ba03?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80",
-  ogType = "website",
-}) => {
-  // Add company name to title if not already included
-  const fullTitle = title.includes("BEE SOLAR POWERS") 
-    ? title 
-    : `${title} | BEE SOLAR POWERS`;
+export default function SEOHead({ 
+  title, 
+  description, 
+  keywords, 
+  canonicalUrl, 
+  ogImage,
+  ogType = "website"
+}: SEOHeadProps) {
+  const siteUrl = window.location.origin; // Gets the base URL dynamically
   
-  // Build the canonical URL
-  const baseUrl = "https://beesolarpower.com";
-  const fullCanonicalUrl = canonicalUrl ? `${baseUrl}${canonicalUrl}` : baseUrl;
-
   return (
     <Helmet>
-      {/* Basic Meta Tags */}
-      <title>{fullTitle}</title>
+      <title>{title}</title>
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
+      <link rel="canonical" href={canonicalUrl || window.location.href} />
       
-      {/* Canonical Link */}
-      <link rel="canonical" href={fullCanonicalUrl} />
-      
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content={ogType} />
-      <meta property="og:url" content={fullCanonicalUrl} />
-      <meta property="og:title" content={fullTitle} />
+      {/* Open Graph Meta Tags */}
+      <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={ogImage} />
+      <meta property="og:url" content={canonicalUrl || window.location.href} />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:image" content={ogImage || `${siteUrl}/logo.png`} />
       
-      {/* Twitter */}
-      <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:url" content={fullCanonicalUrl} />
-      <meta property="twitter:title" content={fullTitle} />
-      <meta property="twitter:description" content={description} />
-      <meta property="twitter:image" content={ogImage} />
-      
-      {/* Additional Meta Tags */}
-      <meta name="author" content="BEE SOLAR POWERS" />
-      <meta name="robots" content="index, follow" />
+      {/* Twitter Card Meta Tags */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={ogImage || `${siteUrl}/logo.png`} />
     </Helmet>
   );
-};
-
-export default SEOHead;
+}
