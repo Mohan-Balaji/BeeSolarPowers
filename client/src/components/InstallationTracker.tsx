@@ -151,19 +151,58 @@ const InstallationTracker: React.FC = () => {
             </CardHeader>
             <CardContent className="pb-2">
               <div className="mb-6">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>Start</span>
-                  <span>Installation</span>
-                  <span>Testing</span>
-                  <span>Complete</span>
-                </div>
-                <Progress value={getStatusPercentage(installation.status)} className="h-3 rounded-full" />
-                <div className="mt-2 flex justify-between">
-                  <div className="text-xs text-gray-500">
-                    Status: <span className="font-medium">{getStatusText(installation.status)}</span>
+                {/* Modern step indicator progress */}
+                <div className="relative mb-2">
+                  <div className="overflow-hidden mb-6 mt-4">
+                    {/* Progress bar background */}
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      {/* Animated progress bar */}
+                      <div 
+                        className={`${getStatusColor(installation.status)} h-1.5 rounded-full transition-all duration-700 ease-in-out`}
+                        style={{width: `${getStatusPercentage(installation.status)}%`}}
+                      />
+                    </div>
+                    
+                    {/* Progress steps */}
+                    <div className="relative h-0">
+                      {/* Step indicators */}
+                      <div className="absolute -top-[9px] left-0 w-full flex justify-between">
+                        {/* Step 1: Start */}
+                        <div className={`flex flex-col items-center ${getStatusPercentage(installation.status) >= 10 ? getStatusColor(installation.status) : 'bg-gray-300'} w-6 h-6 rounded-full transition-colors duration-500 flex items-center justify-center border-2 border-white shadow-md`}>
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                          <span className="absolute -bottom-7 text-xs font-medium w-20 text-center text-gray-700">Pending</span>
+                        </div>
+                        
+                        {/* Step 2: Installation */}
+                        <div className={`flex flex-col items-center ${getStatusPercentage(installation.status) >= 40 ? getStatusColor(installation.status) : 'bg-gray-300'} w-6 h-6 rounded-full transition-colors duration-500 flex items-center justify-center border-2 border-white shadow-md`}>
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                          <span className="absolute -bottom-7 text-xs font-medium w-20 text-center text-gray-700">Installation</span>
+                        </div>
+                        
+                        {/* Step 3: Testing */}
+                        <div className={`flex flex-col items-center ${getStatusPercentage(installation.status) >= 75 ? getStatusColor(installation.status) : 'bg-gray-300'} w-6 h-6 rounded-full transition-colors duration-500 flex items-center justify-center border-2 border-white shadow-md`}>
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                          <span className="absolute -bottom-7 text-xs font-medium w-20 text-center text-gray-700">Testing</span>
+                        </div>
+                        
+                        {/* Step 4: Complete */}
+                        <div className={`flex flex-col items-center ${getStatusPercentage(installation.status) >= 100 ? getStatusColor(installation.status) : 'bg-gray-300'} w-6 h-6 rounded-full transition-colors duration-500 flex items-center justify-center border-2 border-white shadow-md`}>
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                          <span className="absolute -bottom-7 text-xs font-medium w-20 text-center text-gray-700">Complete</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    Completion: <span className="font-medium">{getStatusPercentage(installation.status)}%</span>
+                </div>
+                
+                {/* Status and completion percentage */}
+                <div className="flex justify-between items-center bg-gray-50 p-2 rounded-lg shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 ${getStatusColor(installation.status)} rounded-full`}></div>
+                    <span className="text-sm font-medium text-gray-700">{getStatusText(installation.status)}</span>
+                  </div>
+                  <div className="text-sm font-medium text-gray-700">
+                    {getStatusPercentage(installation.status)}% Complete
                   </div>
                 </div>
               </div>
